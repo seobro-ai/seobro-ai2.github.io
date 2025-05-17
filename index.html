@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>시간 계산기</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 1rem;
+      text-align: center;
+      background-color: #f8f9fa;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    input, select, button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .result-box {
+      margin-top: 1.5rem;
+      text-align: left;
+    }
+
+    .result-item {
+      margin: 0.5rem 0;
+      font-weight: bold;
+    }
+
+    @media (max-width: 500px) {
+      h1 {
+        font-size: 1.4rem;
+      }
+      .container {
+        padding: 1rem 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>시간 계산기</h1>
+    
+    <label for="datetime">기준 시간 선택:</label>
+    <input type="datetime-local" id="datetime" />
+
+    <label for="unit">단위 선택:</label>
+    <select id="unit" onchange="updateResults()">
+      <option value="1440">1일</option>
+      <option value="240">4시간</option>
+      <option value="60">1시간</option>
+      <option value="30">30분</option>
+      <option value="15">15분</option>
+      <option value="1">1분</option>
+      <option value="custom">직접입력(분단위)</option>
+    </select>
+
+    <input type="number" id="customUnit" placeholder="분 단위로 직접 입력" style="display:none;" oninput="updateResults()" />
+
+    <div class="result-box" id="results"></div>
+  </div>
+
+  <script>
+    const datetimeInput = document.getElementById("datetime");
+    const unitSelect = document.getElementById("unit");
+    const customUnitInput = document.getElementById("customUnit");
+    const resultsDiv = document.getElementById("results");
+    const steps = [5, 20, 60, 120]; // 단위 배수
+
+    function pad(n) {
+      return String(n).padStart(2, '0');
+    }
+
+    function formatDate(date) {
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+             `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function updateResults() {
+      const base = datetimeInput.value;
+      if (!base) {
+        resultsDiv.innerHTML = `<p style="color:red;">기준 시간을 먼저 선택하세요.</p>`;
+        return;
+      }
+
+      let unitValue = unitSelect.value;
+      if (unitValue === "custom") {
+        unitValue = parseInt(customUnitInput.value, 10);
+        if (isNaN(unitValue) || unitValue <= 0) {
+          resultsDiv.innerHTML = `<p style="color:red;">유효한 분 단위를 입력해주세요.</p>`;
+          return;
+        }
+      } else {
+        unitValue = parseInt(unitValue);
+      }
+
+      const baseDate = new Date(base);
+      let html = '';
+
+      steps.forEach(step => {
+        const minusDate = new Date(baseDate);
+        minusDate.setMinutes(baseDate.getMinutes() - step * unitValue);
+
+        html += `<div class="result-item">-${step} 단위 → ${formatDate(minusDate)}</div>`;
+      });
+
+      resultsDiv.innerHTML = html;
+    }
+
+    // 초기 설정
+    window.onload = () => {
+      const now = new Date();
+      datetimeInput.value = now.toISOString().slice(0,16); // yyyy-MM-ddTHH:mm
+      updateResults();
+    };
+
+    // 단위 선택 시 직접입력창 토글
+    unitSelect.addEventListener("change", () => {
+      if (unitSelect.value === "custom") {
+        customUnitInput.style.display = "block";
+      } else {
+        customUnitInput.style.display = "none";
+        updateResults();
+      }
+    });
+  </script>
+</body>
+</html>
